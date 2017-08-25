@@ -1,3 +1,5 @@
+from bottle import route,run,get,post,static_file,request
+import json
 import datetime
 start = datetime.datetime.now()
 import dawg
@@ -7,10 +9,10 @@ cd = dawg.CompletionDAWG(words)
 
 matrix = []
 visited = []
-n = int(input())
+n = 4
 for i in range(n):
-    matrix.append(list(input().split(' ')))
     visited.append([False for x in range(n)])
+mem = {}
 
 def do_word_exist(word):
     return rand() > 0.5
@@ -22,21 +24,16 @@ def is_in_range(i,j):
         return False
     return True
 
-mem = {}
+
 def traverse(word,position,i,j):
+    global mem
     words = []
     positions = []
-    # print('word is ')
-    # print(word)
-    # print('position is ')
-    # print(position)
-    if word.lower() in mem:
-        print("Word already present not added: "+word)
+
     if len(word) > 2 and word.lower() in d and word.lower() not in mem:
         words.append(word)
         positions.append(list(position))
-        mem[word] = True
-        print(mem)
+        mem[word.lower()] = True
     #Top-Left
     if is_in_range(i-1,j-1) and not visited[i-1][j-1]:
         new_word = word
@@ -149,17 +146,14 @@ def traverse(word,position,i,j):
             visited[i][j-1] = False
         position.pop()
         # print("Back to "+word)
-    # print("Returning "+word)
-    # print(arr)
-    # print("Returning ")
-    # print(words)
-    # print(positions)
     return [words,positions]
 
 def solution():
+    global mem
     words = []
     positions = []
     mem = {}
+    print(matrix)
     for i in range(n):
         for j in range(n):
             visited[i][j] = True
@@ -168,17 +162,21 @@ def solution():
             positions.extend(x[1])
             visited[i][j] = False
     return words,positions
-final_words,final_positions = solution()
 
-final_words,final_positions = zip(*sorted(zip(final_words,final_positions), key = lambda x:len(x[0])))
-for word,position in zip(final_words,final_positions):
-    print(word)
-    print(position)
-# final_words = list(set(final_words))
-# # print(final_words)
-# final_words.sort(key = lambda x:len(x))
-# for word in final_words:
-#     print(word)
-end = datetime.datetime.now()
-diff = end-start
-print("Calculated in : " + str(diff.total_seconds()) +" seconds.")
+
+@get('/')
+def index():
+    return static_file('/index.html',root = './public')
+
+@post('/solve')
+def solve():
+    global matrix
+    r = request.body
+    j = json.loads(str(r.getvalue(),'utf-8'))
+    matrix = j['matrix']
+    final_words,final_positions = solution()
+    print(len(final_words))
+    print(len(final_positions))
+    final_words,final_positions = zip(*sorted(zip(final_words,final_positions), key = lambda x:len(x[0])))
+    return json.dumps({'words': final_words, 'positions' : final_positions})
+run(host='localhost',port = 3000)

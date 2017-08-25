@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Wordament Solver</title>
+    <style media="screen">
+      .input-box{
+        width: 5%;
+      }
+      #left {
+        margin-top: 2%;
+      }
+      .word{
+        cursor: pointer;
+      }
+      .word:hover{
+        font-weight: bold;
+      }
+      #show{
+        position: fixed;
+        margin-top: 2%;
+      }
+      .active {
+        font-weight: bold;
+        color : blue;
+      }
+    </style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" media="screen" title="no title" charset="utf-8">
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-3" id ='left'>
+
+        </div>
+        <div class="col-md-6">
+          <div id='input-ele'>
+            <center>
+              <h1>This is a wordament solver</h1>
+              <input class = 'input-box' id='11'type="text" name="name" value="A">
+              <input class = 'input-box' id='12'type="text" name="name" value="T">
+              <input class = 'input-box' id='13'type="text" name="name" value="T">
+              <input class = 'input-box' id='14'type="text" name="name" value="P"><br><br>
+              <input class = 'input-box' id='21'type="text" name="name" value="E">
+              <input class = 'input-box' id='22'type="text" name="name" value="L">
+              <input class = 'input-box' id='23'type="text" name="name" value="O">
+              <input class = 'input-box' id='24'type="text" name="name" value="S"><br><br>
+              <input class = 'input-box' id='31'type="text" name="name" value="H">
+              <input class = 'input-box' id='32'type="text" name="name" value="R">
+              <input class = 'input-box' id='33'type="text" name="name" value="S">
+              <input class = 'input-box' id='34'type="text" name="name" value="D"><br><br>
+              <input class = 'input-box' id='41'type="text" name="name" value="E">
+              <input class = 'input-box' id='42'type="text" name="name" value="A">
+              <input class = 'input-box' id='43'type="text" name="name" value="T">
+              <input class = 'input-box' id='44'type="text" name="name" value="A"><br><br>
+              <input id = 'submit-button' type="button" name="name" value="Solve">
+            </center>
+          </div>
+          <div id='show'>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+  <script type="text/javascript" src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+  <script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/d3/4.10.0/d3.min.js'></script>
+  <script type="text/javascript">
+  var data = {
+    matrix : []
+  };
+  var words = [];
+  var positions = [];
+  var cellHeight;
+  var cellWidth;
+  var padding,cellPadding;
+  current = 0;
+  function renderbox(matrix) {
+    let n = matrix.length;
+    let root = d3.select('#show');
+    let h = 420;
+    let w = 420;
+    let svg = root.append('svg').attr('height',h).attr('width',w);
+    let box = svg.append('g').attr('class','box');
+    svg.append('g').attr('class','arrows');
+    padding = 10;
+    cellPadding = 10;
+    cellHeight = (h-2*padding)/n;
+    cellWidth = (w-2*padding)/n;
+    for(let j = 0; j < n; j++) {
+      for(let i = 0; i < n; i++) {
+        let g = box.append('g').attr('class','cell')
+        g.append('rect').attr('class','cell-rect')
+                        .attr('id','cell'+'_'+(j*n+i))
+                        .attr('height',cellHeight-2*cellPadding)
+                        .attr('width',cellWidth-2*cellPadding)
+                        .attr('x',i*cellWidth+padding + cellPadding)
+                        .attr('y',j*cellHeight+padding + cellPadding)
+                        .style('stroke','black')
+                        .style('stroke-width',2)
+                        .style('fill','hsla(237, 100%, 59%, 1)');
+          g.append('text').attr('x',i*cellWidth+padding + cellWidth/2)
+                          .attr('y',j*cellHeight+padding + cellHeight/2)
+                          .style('text-anchor','middle')
+                          .style('alignment-baseline','middle')
+                          .style('font-size',40)
+                          .style('fill','white')
+                          .text(matrix[j][i]);
+      }
+    }
+    root.append('center').append('h2').attr('id','selected-word');
+    $(document).keydown((e) => {
+      switch(e.which) {
+        case 38: prev();break;
+        case 40: next();break;
+      }
+    })
+  }
+
+  function clean() {
+    let box = d3.select('#show').select('svg').select('.box');
+    box.selectAll('.cell-rect').transition().duration(0).style('fill','hsla(237, 100%, 59%, 1)');
+    d3.selectAll('.active').classed('active',false);
+    d3.select('#show').select('svg').selectAll('.lines').remove();
+  }
+
+  function draw(index) {
+    clean();
+    current = index;
+    d3.select('#word_'+index).classed('active',true);
+    d3.select('#selected-word').html(words[current]);
+    let word_position = positions[index];
+    let box = d3.select('#show').select('svg').select('.box');
+    let arrowBox = d3.select('#show').select('.arrows');
+    for(let i = 0; i < word_position.length; i++) {
+      let position = word_position[i];
+      box.select('#cell_'+position).transition().duration(400*(i+1)).style('fill','hsla(117, 100%, 44%, 1)');
+    }
+    for(let i = 0; i < word_position.length-1;i++) {
+      let position = word_position[i];
+      let e1 = box.select('#cell_'+position);
+      position = word_position[i+1];
+      let e2 = box.select('#cell_'+position);
+      let x1 = parseInt(e1.attr('x')), x2 = parseInt(e2.attr('x')),
+          y1 = parseInt(e1.attr('y')), y2 = parseInt(e2.attr('y'));
+      arrowBox.append('line').lower().style('stroke','black').style('stroke-width',4)
+              .attr('x1',x1+cellWidth/2 - cellPadding)
+              .attr('x2',x2+cellWidth/2 - cellPadding)
+              .attr('y1',y1+cellHeight/2 - cellPadding)
+              .attr('y2',y2+cellHeight/2 - cellPadding)
+              .attr('class','lines');
+    }
+  }
+
+  function next() {
+    current += 1;
+    draw(current);
+  }
+
+  function prev() {
+    current -= 1;
+    draw(current);
+  }
+
+  $(document).ready(function() {
+
+    $('#submit-button').click(() => {
+
+      for(let i = 1; i <= 4; i++) {
+        data.matrix.push([])
+        for(let j = 1; j <= 4; j++) {
+          data.matrix[i-1].push($('#'+i+j).val())
+        }
+      }
+
+      function onsuccess(res) {
+        res = JSON.parse(res);
+        words = res.words.reverse();
+        positions = res.positions.reverse();
+        $('#input-ele').hide();
+        let side = $('#left');
+        for(let i = 0; i < words.length; i++) {
+          side.append($('<div>',{
+            'class':'row'
+          }).append($('<h4>',{
+            'class' : 'word',
+            'id' : 'word_'+i,
+            'onclick' : 'draw('+i+')'
+          }).append(words[i])));
+        }
+        renderbox(data.matrix);
+        draw(0);
+      };
+
+      $.post({
+        url : '/solve',
+        data : JSON.stringify(data),
+        method : 'POST',
+        success : onsuccess,
+        error : function(err) {
+          console.log(err);
+        }
+      });
+    })
+  });
+  </script>
+</html>
