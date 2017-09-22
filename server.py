@@ -194,11 +194,23 @@ def points(word):
     score = 0
     for letter in word:
         score += points_array[letter]
+    if len(word) >= 8:
+        score *= 3
+    elif len(word) >= 6:
+        score *= 2
+    elif len(word) >= 4:
+        score *= 1.5
     return score
 @get('/')
 def index():
     return static_file('/index.html',root = './public')
+@get('/check/<word>')
 
+def check(word):
+    if word.lower() in d:
+        return "True"
+    else:
+        return "False"
 @post('/solve')
 def solve():
     global matrix
@@ -206,8 +218,8 @@ def solve():
     j = json.loads(str(r.getvalue(),'utf-8'))
     matrix = j['matrix']
     final_words,final_positions = solution()
-    print(len(final_words))
-    print(len(final_positions))
     final_words,final_positions = zip(*sorted(zip(final_words,final_positions), key = lambda x:points(x[0])))
-    return json.dumps({'words': final_words, 'positions' : final_positions})
+    scores = [points(x) for x in final_words]
+    return json.dumps({'words': final_words, 'positions' : final_positions,'points': scores})
+
 run(host='localhost',port = 3000)

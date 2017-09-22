@@ -181,6 +181,7 @@
         res = JSON.parse(res);
         words = res.words.reverse();
         positions = res.positions.reverse();
+        points = res.points.reverse();
         $('#input-ele').hide();
         let side = $('#left');
         for(let i = 0; i < words.length; i++) {
@@ -190,7 +191,7 @@
             'class' : 'word',
             'id' : 'word_'+i,
             'onclick' : 'draw('+i+')'
-          }).append(words[i])));
+          }).append(words[i]+ ' ('+points[i]+')')));
         }
         renderbox(data.matrix);
         draw(0);
